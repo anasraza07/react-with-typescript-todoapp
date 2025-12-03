@@ -1,4 +1,1 @@
-/* @import "tailwindcss"; */
-body{
-    font-family: cursive;
-}
+@import "tailwindcss";
