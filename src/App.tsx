@@ -1,89 +1,72 @@
-import { use, useEffect, useState } from "react";
-import { v4 as uuidv4 } from 'uuid';
-import { IoMdAdd } from "react-icons/io";
-import { FaEdit } from "react-icons/fa";
-import { MdDelete } from "react-icons/md";
+import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import InputField from "./components/InputField";
+import type { Todo } from "./App.types";
+import TodoList from "./components/TodoItem";
 
-
-const App = () => {
-  const [todoInput, setTodoInput] = useState("");
+const App: React.FC = () => {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [todoInput, setTodoInput] = useState<string>("");
   const [updatedTodoInput, setUpdatedTodoInput] = useState("");
-  const [todos, setTodos] = useState<Todo[]>([{ id: "1", todo: "go to gym" },
-  { id: "2", todo: "eat lunch" }
-  ]);
   const [editId, setEditId] = useState("");
 
-  interface Todo {
-    id: string,
-    todo: string
-  }
+  // add todo function
+  const handleAddTodo = () => {
+    if (!todoInput.trim()) return;
 
-  useEffect(() => {
-    console.log("todo:", todos)
-  }, [todos])
+    setTodos((prev) => [{ id: uuidv4(), todo: todoInput, isDone: false }, ...prev]);
+    setTodoInput("");
+  };
 
-  const addTodo = () => {
-    setTodos(prevTodos => [
-      { id: uuidv4(), todo: todoInput }, ...prevTodos
-    ])
+  // edit todo function
+  const handleEditTodo = (todo: Todo) => {
+    setEditId(todo.id);
+    setUpdatedTodoInput(todo.todo);
+  };
 
-    setTodoInput("")
-  }
+  // save todo function
+  const handleSaveTodo = (id: string, updated: string) => {
+    setTodos((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, todo: updated } : item
+      )
+    );
+    setEditId("");
+  };
 
-  const editTodo = (todo: Todo) => {
-    setEditId(todo.id)
-    setUpdatedTodoInput(todo.todo)
-  }
+  // delete todo function
+  const handleDeleteTodo = (id: string) => {
+    setTodos((prev) => prev.filter((t) => t.id !== id));
+  };
 
-  const saveTodo = (todoId: string, updatedTodo: string) => {
-    setTodos(prevTodos => prevTodos.map(todoItem => {
-      return todoItem.id === todoId ? {
-        ...todoItem, todo: updatedTodo
-      } : todoItem
-    }))
-    setEditId("")
-  }
-
-  const deleteTodo = (todoId: string) => {
-    setTodos(prevTodos => prevTodos.filter(todo => {
-      return todo.id != todoId;
-    }))
+  const handleToggleTodo = (id: string) => {
+    setTodos(prevTodos =>
+      prevTodos.map(todo =>
+        todo.id === id ? { ...todo, isDone: !todo.isDone } : todo
+      )
+    )
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="container max-w-[600px] mx-auto p-4 bg-gray-50">
-        <h1 className="text-4xl font-bold my-8">Todo App!</h1>
-        <div className="flex gap-3 mb-6">
-          <input type="text" className="flex-1 border border-gray-400 rounded-sm p-1 outline-none px-2" placeholder="Enter your todo..."
-            onChange={e => setTodoInput(e.target.value)} value={todoInput} />
-          <button onClick={addTodo} className="bg-purple-500 text-white px-2 rounded-sm font-extrabold cursor-pointer text-lg border-none outline-none hover:bg-purple-500/90"><IoMdAdd /></button>
-        </div>
-        {/* todos */}
+    <div className="min-h-screen bg-linear-to-br from-purple-100 to-purple-200 flex justify-center p-4">
+      <div className="w-full max-w-lg bg-white rounded-xl shadow-xl p-6">
+        <h1 className="text-4xl font-bold mb-8 text-purple-600 text-center">
+          Todo App
+        </h1>
+
+        {/* Input bar */}
+        <InputField todoInput={todoInput} setTodoInput={setTodoInput} addTodo={handleAddTodo} />
+
+        {/* Todo List */}
         <ul className="flex flex-col gap-4">
-          {todos.map(todo => (
-            <li key={todo.id} className="bg-gray-200 p-1 px-2 flex justify-between items-center rounded-sm">
-              {todo.id != editId ? (
-                <>
-                  <span className="text-lg">{todo.todo}</span>
-                  <div className="space-x-2">
-                    <button className="bg-blue-500 hover:bg-blue-500/90 p-2 text-white rounded-sm cursor-pointer" onClick={() => editTodo(todo)}><FaEdit /></button>
-                    <button className="bg-red-500 hover:bg-red-500/90 p-2 text-white rounded-sm cursor-pointer" onClick={() => deleteTodo(todo.id)}><MdDelete /></button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <input type="text" value={updatedTodoInput} className="bg-white rounded-sm px-2"
-                    onChange={e => setUpdatedTodoInput(e.target.value)} />
-                  <button className="bg-purple-500 text-white px-2 rounded-sm font-bold cursor-pointer text-lg" onClick={() => saveTodo(todo.id, updatedTodoInput)}>Save</button>
-                </>
-              )}
-            </li>
+          {todos.map((todo) => (
+            <TodoList key={todo.id} todo={todo} editId={editId}
+              editTodo={handleEditTodo} deleteTodo={handleDeleteTodo} saveTodo={handleSaveTodo} updatedTodoInput={updatedTodoInput} setUpdatedTodoInput={setUpdatedTodoInput} toggleTodo={handleToggleTodo} />
           ))}
         </ul>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default App;
